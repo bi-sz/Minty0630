@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="kr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Minty</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css">
+    <style>
+      .container {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px;
+      }
+      .section {
+        flex-basis: 30%;
+        text-align: center;
+      }
+      #calendar {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      #weather-info {
+        position: absolute;
+        top: 65%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+      .container {
+        display: flex;
+        justify-content: center;
+      }
+      .container .section {
+        margin-right: 20px;
+      }
+      .fc-past {
+        pointer-events: none;
+        background-color: hsl(0, 0%, 90%);
+      }
+      .fc-today {
+        background-color: #a3c3ff;
+      }
+      .fc-selected {
+        background-color: hsl(120, 70%, 90%);
+      }
+      .weather-icon {
+        font-size: 48px;
+        margin: 10px auto;
+        display: block;
+      }
+      .weather-info-text {
+        margin-bottom: -5px;
+      }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      /* 알림 메시지 스타일 */
+      .notification {
+        background-color: #f8f8f8;
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 18px;
+      }
+      /* 섹션 스타일 */
+      .section {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      /* 버튼 컨테이너 스타일 */
+      .button-container {
+        margin-top: 20px;
+        text-align: center;
+      }
+      .button-container button {
+        margin-right: 10px;
+      }
+       #tradeForm{
+       display:flex;
+       float:left;
+       width:100vw;
+       }
+    input {
+      --color: #945;
+      --size: 2rem;
+      --border: calc(var(--size) * 0.125);
+      --borderRadius: calc(var(--size) * 0.5);
+      --labelSize: calc(var(--size) * 0.75);
+      --margin: calc(var(--size) * 0.25);
+      --marginLeft: calc(var(--size) + calc(var(--size) * 0.5));
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='20' cy='20' r='18.5' fill='none' stroke='%23222' stroke-width='3' /><path d='M20,4 20,8 M4,20 8,20 M36,20 32,20 M20,36 20,32' stroke='%23bbb' stroke-width='1' /><circle cx='20' cy='20' r='2' fill='%23222' stroke='%23222' stroke-width='2' /></svg>"),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M18.5,24.5 19.5,4 20.5,4 21.5,24.5 Z' fill='%23222' style='transform:rotate(120deg); transform-origin: 50% 50%;' /></svg>"),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M18.5,24.5 19.5,8.5 20.5,8.5 21.5,24.5 Z' style='transform:rotate(20deg); transform-origin: 50% 50%;' /></svg>");
+      background-position: var(--margin) 50%;
+      background-repeat: no-repeat;
+      background-size: var(--size) var(--size);
+      border: var(--border) solid var(--color);
+      border-radius: var(--borderRadius);
+      color: #222;
+      font-size: var(--size);
+      padding: var(--margin) var(--margin) var(--margin) var(--marginLeft);
+      transition: backgroundImage 0.25s;
+    }
+
+    input:focus {
+      outline: 2px dashed white;
+      outline-offset: 3px;
+    }
+
+    body{
+        background: #e0e5ec;
+      }
+      /*  월화수목금토일  */
+      button {
+        border: 0;
+        position: relative;
+      }
+
+      button::before,
+      button::after {
+        box-sizing: inherit;
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      .spin {
+        height: 35px;
+        width: 35px;
+      }
+
+      .spin::before,
+      .spin::after {
+        top: 0;
+        left: 0;
+      }
+
+      .spin::before {
+        border: 2px solid transparent;
+      }
+
+      .spin:hover::before {
+        border-top-color: #5bc27e;
+        border-right-color: #5bc27e;
+        border-bottom-color: #5bc27e;
+        transition: border-top-color 0.2s linear,
+          border-right-color 0.1s linear 0.1s,
+          border-bottom-color 0.1s linear 0.2s;
+      }
+
+      .spin::after {
+        border: 0 solid transparent;
+      }
+
+      .spin:hover::after {
+        border-top: 2px solid #5bc27e;
+        border-left-width: 2px;
+        border-right-width: 2px;
+        transform: rotate(270deg);
+        transition: transform 0.25s linear 0s, border-left-width 0s linear 0.25s,
+          -webkit-transform 0.25s linear 0s;
+      }
+
+      .circle {
+        border-radius: 100%;
+        box-shadow: none;
+      }
+
+      .circle::before,
+      .circle::after {
+        border-radius: 100%;
+      }
+
+      .spin.selected::before {
+        border-top-color: #5bc27e;
+        border-right-color: #5bc27e;
+        border-bottom-color: #5bc27e;
+        background-color: #5bc27d2e;
+
+        transition: border-top-color 0.15s linear,
+          border-right-color 0.15s linear 0.1s,
+          border-bottom-color 0.15s linear 0.2s;
+      }
+
+      .spin.selected::after {
+        border-top: 2px solid #5bc27e;
+        border-left-width: 2px;
+        border-right-width: 2px;
+        background-color: #5bc27d3e;
+        transform: rotate(270deg);
+        transition: transform 0.3s linear 0s, border-left-width 0s linear 0.35s,
+          -webkit-transform 0.3s linear 0s;
+        box-shadow: 0 0 1px #5bc27e, 0 0 3px #5bc27e, 0 0 7px #5bc27e,
+          0 0 10px #5bc27e;
+      }
+      p {
+        margin-top: 30px;
+      }
+
+
+      .timer {
+        --color: rgba(128, 128, 128, 0.471);
+        --size: 1rem;
+        --border: calc(var(--size) * 0.125);
+        --borderRadius: calc(var(--size) * 0.5);
+        --labelSize: calc(var(--size) * 0.75);
+        --margin: calc(var(--size) * 0.25);
+        --marginLeft: calc(var(--size) + calc(var(--size) * 0.5));
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><circle cx='20' cy='20' r='18.5' fill='none' stroke='%23222' stroke-width='3' /><path d='M20,4 20,8 M4,20 8,20 M36,20 32,20 M20,36 20,32' stroke='%23bbb' stroke-width='1' /><circle cx='20' cy='20' r='2' fill='%23222' stroke='%23222' stroke-width='2' /></svg>"),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M18.5,24.5 19.5,4 20.5,4 21.5,24.5 Z' fill='%23222' style='transform:rotate(120deg); transform-origin: 50% 50%;' /></svg>"),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M18.5,24.5 19.5,8.5 20.5,8.5 21.5,24.5 Z' style='transform:rotate(20deg); transform-origin: 50% 50%;' /></svg>");
+        background-position: var(--margin) 50%;
+        background-repeat: no-repeat;
+        background-size: var(--size) var(--size);
+        border: var(--border) solid var(--color);
+        border-radius: var(--borderRadius);
+        color: #222;
+        font-size: var(--size);
+        padding: var(--margin) var(--margin) var(--margin) var(--marginLeft);
+        transition: backgroundImage 0.25s;
+        margin-top: 10px;
+      }
+
+      .timer:focus {
+        outline: 2px dashed white;
+        outline-offset: 3px;
+      }
+
+      .edit,
+      .edit2 {
+        margin-top: 15px !important;
+        margin: auto;
+        width: 5vw;
+        border: 1px solid #5bc27e;
+        background-color: rgba(0, 0, 0, 0);
+        color: black;
+        padding: 5px;
+        border-radius: 20px;
+        transition: background-color 0.3s, color 0.3s; /* 배경색과 폰트색의 변화를 0.3초 동안 적용 */
+      }
+
+      .edit:hover,
+      .edit2:hover {
+        background-color: #5bc27e;
+        color: white;
+        box-shadow: 3px 3px 15px #5bc27e;
+      }
+    </style>
+</head>
+<body>
+<div class="notification">
+    <span th:text="'[' + (${role} == 'buyer' ? ${seller.nickName} : ${buyer.nickName}) + ']'"></span>
+    <span th:text="'님과 [' + ${trade.boardId.title} + '] 에 대한 거래 일정 잡기.'"></span>
+</div>
+
+<form id="tradeForm" method="post" action="/updateTradeSchedule">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    <input type="hidden" name="tradeId" th:value="${tradeId}" />
+
+    <!-- 거래 가능 시간 섹션 -->
+    <div class="section">
+        <span th:text="'[' + (${role} == 'buyer' ? ${seller.nickName} : ${buyer.nickName}) + '] 님의 거래 희망 시간'"></span>
+        <!--거래 유저 정보 -->
+        <div class="userSchedule">
+            <div style="cursor: pointer; margin-top: 15px;" class="ad-item">
+                <div class="image-preview">
+                    <img th:src="@{../image/aaaa.png}" alt="이미지" width="40" height="40" style="border-radius: 50%; margin-left: 10px;">
+                    <span th:text="${role} == 'buyer' ? ${seller.nickName} : ${buyer.nickName}" style="color: #999;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 거래 희망 요일 -->
+        <div th:if="${role} == 'seller'">
+            <div th:if="${buyerScheduleDay == null}">
+                <p>등록된 거래 희망 요일 정보가 없습니다.</p>
+                <button class="spin circle hd">일</button>
+                <button class="spin circle hd">월</button>
+                <button class="spin circle hd">화</button>
+                <button class="spin circle hd">수</button>
+                <button class="spin circle hd">목</button>
+                <button class="spin circle hd">금</button>
+                <button class="spin circle hd">토</button>
+            </div>
+
+            <div th:if="${buyerScheduleDay != null}">
+                <button th:class="${buyerScheduleDay.sunday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">일</button>
+                <button th:class="${buyerScheduleDay.monday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">월</button>
+                <button th:class="${buyerScheduleDay.tuesday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">화</button>
+                <button th:class="${buyerScheduleDay.wednesday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">수</button>
+                <button th:class="${buyerScheduleDay.thursday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">목</button>
+                <button th:class="${buyerScheduleDay.friday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">금</button>
+                <button th:class="${buyerScheduleDay.saturday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">토</button>
+            </div>
+        </div>
+
+        <div th:if="${role} == 'buyer'">
+            <div th:if="${sellerScheduleDay == null}">
+                <p>등록된 거래 희망 요일 정보가 없습니다.</p>
+                <button class="spin circle hd">일</button>
+                <button class="spin circle hd">월</button>
+                <button class="spin circle hd">화</button>
+                <button class="spin circle hd">수</button>
+                <button class="spin circle hd">목</button>
+                <button class="spin circle hd">금</button>
+                <button class="spin circle hd">토</button>
+            </div>
+
+            <div th:if="${sellerScheduleDay != null}">
+                <button th:class="${sellerScheduleDay.sunday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">일</button>
+                <button th:class="${sellerScheduleDay.monday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">월</button>
+                <button th:class="${sellerScheduleDay.tuesday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">화</button>
+                <button th:class="${sellerScheduleDay.wednesday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">수</button>
+                <button th:class="${sellerScheduleDay.thursday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">목</button>
+                <button th:class="${sellerScheduleDay.friday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">금</button>
+                <button th:class="${sellerScheduleDay.saturday == 1 ? 'spin circle hd selected' : 'spin circle hd'}">토</button>
+            </div>
+        </div>
+
+        <!-- 거래 희망 시간 -->
+        <div th:if="${role} == 'seller'">
+            <div th:if="${buyerScheduleDuration.isEmpty()}">
+                <p>등록된 거래 희망 시간 정보가 없습니다.</p>
+                <img id="add-input-button" src="image/plus.png" style="margin-left: 22vw;width: 20px;border: rgba(108, 96, 96, 0.585) dashed 1px;z-index: 50;cursor: pointer;" onclick="addTimers()"/>
+                <br />
+            </div>
+
+            <div th:if="${!buyerScheduleDuration.isEmpty()}">
+                <th:block th:each="duration : ${buyerScheduleDuration}">
+                    <input class="timer" type="time" name="time" oninput="updateText()" th:value="${duration.startTime}"/>
+                    ~
+                    <input class="timer" type="time" name="time" oninput="updateText()" th:value="${duration.endTime}"/>
+                </th:block>
+            </div>
+        </div>
+
+        <!-- 거래 희망 시간 -->
+        <div th:if="${role} == 'buyer'">
+            <div th:if="${sellerScheduleDuration.isEmpty()}">
+                <p>등록된 거래 희망 시간 정보가 없습니다.</p>
+                <img id="add-input-button2" src="image/plus.png" style="margin-left: 22vw;width: 20px;border: rgba(108, 96, 96, 0.585) dashed 1px;z-index: 50;cursor: pointer;" onclick="addTimers()"/>
+                <br />
+            </div>
+
+            <div th:if="${!sellerScheduleDuration.isEmpty()}">
+                <th:block th:each="duration : ${sellerScheduleDuration}">
+                    <input class="timer" type="time" name="time" oninput="updateText()" th:value="${duration.startTime}"/>
+                    ~
+                    <input class="timer" type="time" name="time" oninput="updateText()" th:value="${duration.endTime}"/>
+                </th:block>
+            </div>
+        </div>
+
+
+        <!-- 거래 희망 위치 -->
+        <div th:if="${role} == 'seller'">
+            <div th:if="${buyerSchedule == null || !buyerCheckArea}">
+                <p>등록된 거래희망 위치정보가 없습니다.</p>
+            </div>
+
+            <div th:if="${buyerSchedule != null && buyerCheckArea}">
+                <input type="text" th:value="${buyerSchedule.getHopeArea()}" id="hopeArea" readonly>
+            </div>
+        </div>
+
+        <div th:if="${role} == 'buyer'">
+            <div th:if="${sellerSchedule == null || !sellerCheckArea}">
+                <p>등록된 거래희망 위치정보가 없습니다.</p>
+            </div>
+
+            <div th:if="${sellerSchedule != null && sellerCheckArea}">
+                <input type="text" th:value="${sellerSchedule.getHopeArea()}" id="hopeArea2" readonly>
+            </div>
+        </div>
+
+        <!-- 거래 희망 소개 -->
+        <div th:if="${role} == 'seller'">
+            <div th:if="${buyerSchedule == null || !buyerCheckIntroduction}">
+                <p>등록된 거래희망 소개가 없습니다.</p>
+                <input class="memo hd" placeholder="거래희망 소개를 등록해주세요" style="width: 50%; text-align: center"/>
+            </div>
+
+            <div th:if="${buyerSchedule != null && buyerCheckIntroduction}">
+                <input type="text" th:value="${buyerSchedule.getIntroduction()}" id="introduction" readonly>
+            </div>
+        </div>
+
+        <div th:if="${role} == 'buyer'">
+            <div th:if="${sellerSchedule == null || !sellerCheckIntroduction}">
+                <p>등록된 거래희망 소개가 없습니다.</p>
+                <input class="memo hd" placeholder="거래희망 소개를 등록해주세요" style="width: 50%; text-align: center"/>
+            </div>
+
+            <div th:if="${sellerSchedule != null && sellerCheckIntroduction}">
+                <input type="text" th:value="${sellerSchedule.getIntroduction()}" id="introduction2" readonly>
+            </div>
+        </div>
+    </div>
+
+    <!-- 캘린더 섹션 -->
+    <div class="section">
+        <h2>캘린더</h2>
+        <div id="calendar"></div>
+        <div class="weather-info">
+
+            <p class="weather-info-text far fa-calendar-alt" id="selected-date"></p>
+            <p class="weather-info-text" id="weather-description"></p>
+            <p class="weather-info-text" id="temperature"></p>
+            <p class="weather-info-text" id="humidity"></p>
+            <p id="error"></p>
+            <i class="weather-icon"></i><br>
+        </div>
+    </div>
+
+    <input type="hidden" id="selected-time" name="tradeTime" value="">
+
+    <!-- 시간 선택 섹션 -->
+    <div class="section">
+        <h2>시간 선택</h2>
+        <div id="selected-date-display"></div>
+        <input type="time" name="time" id="time" oninput="updateText()"/>
+        <div class="button-container">
+            <button type="submit">확인</button>
+            <button type="button">취소</button>
+        </div>
+    </div>
+
+    </div>
+</form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+<script>
+function updateText() {
+    var time = document.getElementById("time").value;
+    document.getElementById("selected-time").value = time;
+}
+
+function getSelectedTime() {
+    var selectedTime = $('#selected-time').val();
+    return selectedTime;
+}
+
+$('#calendar').on('click', '.fc-day', function() {
+    var selectedDate = $(this).data('date');
+    $('#selected-date').text(selectedDate);
+    $('#selected-date-display').text('거래 희망 날짜: ' + selectedDate);
+});
+
+$(document).ready(function () {
+        $("#add-input-button").click(function () {
+          var inputElement1 = $(
+            '<input class="timer" type="time" name="time" id="time" oninput="updateText()">'
+          ); // 첫 번째 input 요소 생성
+          var textElement = $("<span> ~ </span>"); // "~" 글자 요소 생성
+          var inputElement2 = $(
+            '<input class="timer" type="time" name="time" id="time" oninput="updateText()">'
+          ); // 두 번째 input 요소 생성
+
+          var container = $("#input-container");
+          container.append(inputElement1); // 첫 번째 input 요소 추가
+          container.append(textElement); // "~" 글자 추가
+          container.append(inputElement2); // 두 번째 input 요소 추가
+          container.append("<br>"); //
+        });
+
+        $("#add-input-button2").click(function () {
+          var inputElement = $(
+            '<input class="timer" type="time" name="time" id="time" oninput="updateText()">'
+          ); // 첫 번째 input 요소 생성
+          var textElement = $("<span> ~ </span>"); // "~" 글자 요소 생성
+          var inputElement2 = $(
+            '<input class="timer" type="time" name="time" id="time" oninput="updateText()">'
+          ); // 두 번째 input 요소 생성
+
+          var container = $("#input-container");
+          container.append(inputElement1); // 첫 번째 input 요소 추가
+          container.append(textElement); // "~" 글자 추가
+          container.append(inputElement2); // 두 번째 input 요소 추가
+          container.append("<br>"); //
+        });
+
+        $(".spin").click(function () {
+            $(this).toggleClass("selected");
+        });
+
+        $(".edit").click(function () {
+          $(this).addClass("hd");
+          $(".spin").removeClass("hd");
+          $(".memo").removeClass("hd");
+          $(".edit2").removeClass("hd");
+        });
+
+        $(".edit2").click(function () {
+          $(this).addClass("hd");
+          $(".spin").addClass("hd");
+          $(".edit").removeClass("hd");
+          $(".memo").addClass("hd");
+        });
+      });
+</script>
+<script type="text/javascript" th:src="@{/js/weather.js}"></script>
+</body>
+</html>
