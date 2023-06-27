@@ -110,8 +110,8 @@ public class ScheduleListController {
     @PostMapping("/scheduleRegist")
     public String scheduleRegist(@RequestParam(name = "scheduleDay") List<Integer> days ,
                                  @RequestParam(name = "introduction") String introduction,
-                                 @RequestParam(name = "startTime") List<String> startTimeStrings,
-                                 @RequestParam(name = "endTime") List<String> endTimeStrings,
+                                 @RequestParam(name = "startTime[]") List<String> startTimeStrings,
+                                 @RequestParam(name = "endTime[]") List<String> endTimeStrings,
                                  HttpSession session) {
         Long userId = (Long) session.getAttribute("userId");
         User user = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);

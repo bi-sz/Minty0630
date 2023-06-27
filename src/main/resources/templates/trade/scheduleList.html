@@ -306,7 +306,7 @@
                 <!-- 거래 희망 소개 -->
                 <div th:if="${schedule == null || !checkIntroduction}">
                     <p>등록된 거래희망 소개가 없습니다.</p>
-                    <input id="introductionInput" class="memo" placeholder="거래희망 소개를 등록해주세요" style="width: 50%; text-align: center" />
+                    <input id="introduction" class="introduction" placeholder="거래희망 소개를 등록해주세요" style="width: 50%; text-align: center" />
                 </div>
 
                 <div th:if="${scheduleDay == null and scheduleDuration.isEmpty() and (schedule == null or !checkIntroduction)}">
@@ -351,7 +351,7 @@
             </div>
             <!-- 거래 희망 소개 -->
             <div th:if="${schedule != null && checkIntroduction}">
-                <input type="text" name="editIntroduction" th:value="${schedule.getIntroduction()}" id="introduction">
+                <input type="text" name="editIntroduction" th:value="${schedule.getIntroduction()}" id="editIntroduction">
 
                 <input type="button" id="btnIntroduction" onclick="submitForm('btnIntroduction')" value="변경"/>
             </div>
@@ -481,13 +481,12 @@ function addEditTimers() {
     const formData = new FormData();
 
     if (buttonId === 'btnIntroduction') {
-      const editIntroduction = document.getElementById('introduction').value;
+      const editIntroduction = document.getElementById('editIntroduction').value;
       formData.append('editIntroduction', editIntroduction);
     }
     else if (buttonId === 'btnSubmit') {
       const startTimeElements = Array.from(document.getElementsByName('startTime[]'));
       const endTimeElements = Array.from(document.getElementsByName('endTime[]'));
-      const memoElement = document.getElementById('memo');
       const startTimeList = startTimeElements.map(element => element.value);
       const endTimeList = endTimeElements.map(element => element.value);
       const introduction = document.getElementById('introduction').value;
@@ -495,7 +494,6 @@ function addEditTimers() {
       startTimeList.forEach(startTime => formData.append('startTime[]', startTime));
       endTimeList.forEach(endTime => formData.append('endTime[]', endTime));
       formData.append('scheduleDay', scheduleDay.join(','));
-      formData.append('memo', memoElement.value);
       formData.append('introduction', introduction);
     }
     else if (buttonId === 'btnDay') {
